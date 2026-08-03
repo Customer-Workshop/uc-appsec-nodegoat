@@ -41,6 +41,8 @@ describe("/research behaviour", () => {
       .first()
       .click();
 
-    cy.url().should("include", "https%3A%2F%2Ffinance.yahoo.com%2Fquote%2F&symbol=AAPL");
+    cy.url()
+      .should("include", "symbol=AAPL")
+      .and("not.include", "url=");
   });
 });
