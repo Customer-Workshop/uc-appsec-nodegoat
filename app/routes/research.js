@@ -4,6 +4,8 @@ const {
     environmentalScripts
 } = require("../../config/config");
 
+const STOCK_QUOTE_BASE_URL = "https://finance.yahoo.com/quote/";
+
 function ResearchHandler(db) {
     "use strict";
 
@@ -12,8 +14,16 @@ function ResearchHandler(db) {
     this.displayResearch = (req, res) => {
 
         if (req.query.symbol) {
-            const url = req.query.url + req.query.symbol;
-            return needle.get(url, (error, newResponse, body) => {
+            const symbol = String(req.query.symbol).trim().toUpperCase();
+            if (!/^[A-Z.]{1,10}$/.test(symbol)) {
+                res.writeHead(400, {
+                    "Content-Type": "text/html"
+                });
+                res.write("<h1>Invalid stock symbol.</h1>");
+                return res.end();
+            }
+            const url = STOCK_QUOTE_BASE_URL + encodeURIComponent(symbol);
+            return needle.get(url, { follow_max: 0 }, (error, newResponse, body) => {
                 if (!error && newResponse.statusCode === 200) {
                     res.writeHead(200, {
                         "Content-Type": "text/html"
