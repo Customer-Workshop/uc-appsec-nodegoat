@@ -52,12 +52,9 @@ const index = (app, db) => {
     app.post("/contributions", isLoggedIn, contributionsHandler.handleContributionsUpdate);
 
     // Benefits Page
-    app.get("/benefits", isLoggedIn, benefitsHandler.displayBenefits);
-    app.post("/benefits", isLoggedIn, benefitsHandler.updateBenefits);
-    /* Fix for A7 - checks user role to implement  Function Level Access Control
-     app.get("/benefits", isLoggedIn, isAdmin, benefitsHandler.displayBenefits);
-     app.post("/benefits", isLoggedIn, isAdmin, benefitsHandler.updateBenefits);
-     */
+    // Fix for A7 - checks user role to implement Function Level Access Control
+    app.get("/benefits", isLoggedIn, isAdmin, benefitsHandler.displayBenefits);
+    app.post("/benefits", isLoggedIn, isAdmin, benefitsHandler.updateBenefits);
 
     // Allocations Page
     app.get("/allocations/:userId", isLoggedIn, allocationsHandler.displayAllocations);
@@ -67,9 +64,28 @@ const index = (app, db) => {
     app.post("/memos", isLoggedIn, memosHandler.addMemos);
 
     // Handle redirect for learning resources link
+    // Fix for A10 - Unvalidated Redirects and Forwards
+    // Only allow redirects to an explicit allow list of destinations
+    const ALLOWED_REDIRECT_HOSTS = [
+        "owasp.org",
+        "www.owasp.org",
+        "cheatsheetseries.owasp.org",
+        "github.com",
+        "nodegoat.herokuapp.com"
+    ];
+
     app.get("/learn", isLoggedIn, (req, res) => {
-        // Insecure way to handle redirects by taking redirect url from query string
-        return res.redirect(req.query.url);
+        let destination;
+        try {
+            destination = new URL(req.query.url);
+        } catch (e) {
+            return res.redirect("/dashboard");
+        }
+
+        const isAllowed = (destination.protocol === "http:" || destination.protocol === "https:") &&
+            ALLOWED_REDIRECT_HOSTS.includes(destination.hostname);
+
+        return res.redirect(isAllowed ? destination.href : "/dashboard");
     });
 
     // Research Page
