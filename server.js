@@ -10,6 +10,7 @@ const swig = require("swig");
 const helmet = require("helmet");
 const MongoClient = require("mongodb").MongoClient; // Driver for connecting to MongoDB
 const http = require("http");
+const crypto = require("crypto");
 const marked = require("marked");
 //const nosniff = require('dont-sniff-mimetype');
 const app = express(); // Web framework to handle routing requests
@@ -50,11 +51,16 @@ MongoClient.connect(db, (err, db) => {
     app.use(helmet.noCache());
 
     // Allow loading resources only from white-listed domains
+    app.use((req, res, next) => {
+        res.locals.cspNonce = crypto.randomBytes(16).toString("base64");
+        next();
+    });
+
     app.use(helmet.contentSecurityPolicy({
         directives: {
             defaultSrc: ["'self'"],
             // raphael, used by the dashboard charts, builds functions dynamically
-            scriptSrc: ["'self'", "'unsafe-eval'"],
+            scriptSrc: ["'self'", "'unsafe-eval'", (req, res) => `'nonce-${res.locals.cspNonce}'`],
             // the bundled views rely on inline style attributes for layout
             styleSrc: ["'self'", "'unsafe-inline'"],
             imgSrc: ["'self'", "data:"],
