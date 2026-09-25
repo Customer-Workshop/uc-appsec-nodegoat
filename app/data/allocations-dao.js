@@ -57,29 +57,33 @@ const AllocationsDAO = function(db) {
     this.getByUserIdAndThreshold = (userId, threshold, callback) => {
         const parsedUserId = parseInt(userId);
 
-        const searchCriteria = () => {
-
-            if (threshold) {
-                const parsedThreshold = parseInt(threshold, 10);
-
-                if (parsedThreshold >= 0 && parsedThreshold <= 99) {
-                    return {
-                        userId: parsedUserId,
-                        stocks: {
-                            $gt: parsedThreshold
-                        }
-                    };
-                }
-                throw `The user supplied threshold: ${threshold} was not valid.`;
-            }
-            return {
-                userId: parsedUserId
-            };
+        // Fix for A1 - NoSQL Injection - the threshold is coerced to a number and range checked
+        // instead of being interpolated into a $where javascript expression
+        let criteria = {
+            userId: parsedUserId
         };
 
-        allocationsCol.find(searchCriteria()).toArray((err, allocations) => {
+        if (threshold) {
+            const parsedThreshold = /^\d+$/.test(String(threshold).trim()) ? parseInt(threshold, 10) : NaN;
+
+            if (!(parsedThreshold >= 0 && parsedThreshold <= 99)) {
+                const message = "The stocks threshold must be a whole number between 0 and 99.";
+                const invalidThresholdError = new Error(message);
+                invalidThresholdError.invalidThreshold = true;
+                return callback(invalidThresholdError, null);
+            }
+
+            criteria = {
+                userId: parsedUserId,
+                stocks: {
+                    $gt: parsedThreshold
+                }
+            };
+        }
+
+        allocationsCol.find(criteria).toArray((err, allocations) => {
             if (err) return callback(err, null);
-            if (!allocations.length) return callback("ERROR: No allocations found for the user", null);
+            if (!allocations.length) return callback(null, []);
 
             let doneCounter = 0;
             const userAllocations = [];

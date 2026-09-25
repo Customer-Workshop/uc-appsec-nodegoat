@@ -17,7 +17,16 @@ function AllocationsHandler(db) {
         } = req.query;
 
         allocationsDAO.getByUserIdAndThreshold(userId, threshold, (err, allocations) => {
-            if (err) return next(err);
+            if (err) {
+                if (!err.invalidThreshold) return next(err);
+                return res.render("allocations", {
+                    userId,
+                    allocations: [],
+                    thresholdError: err.message,
+                    environmentalScripts
+                });
+            }
+
             return res.render("allocations", {
                 userId,
                 allocations,

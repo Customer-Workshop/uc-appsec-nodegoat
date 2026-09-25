@@ -21,6 +21,14 @@
                     <button type="submit" class="btn btn-primary">Submit</button>
                 </form>
 
+                {% if thresholdError %}
+                <div class="alert alert-danger">{{thresholdError}}</div>
+                {% endif %}
+
+                {% if not allocations.length %}
+                <div class="alert alert-info">No allocations matched.</div>
+                {% endif %}
+
             </div>
         </div>
 

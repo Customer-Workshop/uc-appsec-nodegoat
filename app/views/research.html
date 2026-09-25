@@ -12,6 +12,10 @@
 
             <div class="panel-body">
 
+                {% if researchError %}
+                <div class="alert alert-danger">{{researchError}}</div>
+                {% endif %}
+
                 <form action="/research" method="get" role="search">
                     <div class="form-group">
                         <input type="text" class="form-control" placeholder="Stock Symbol" name="symbol" />

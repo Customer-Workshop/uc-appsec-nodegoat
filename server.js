@@ -53,7 +53,8 @@ MongoClient.connect(db, (err, db) => {
     app.use(helmet.contentSecurityPolicy({
         directives: {
             defaultSrc: ["'self'"],
-            scriptSrc: ["'self'"],
+            // raphael, used by the dashboard charts, builds functions dynamically
+            scriptSrc: ["'self'", "'unsafe-eval'"],
             // the bundled views rely on inline style attributes for layout
             styleSrc: ["'self'", "'unsafe-inline'"],
             imgSrc: ["'self'", "data:"],

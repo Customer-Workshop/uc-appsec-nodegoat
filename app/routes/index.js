@@ -71,7 +71,8 @@ const index = (app, db) => {
         "www.owasp.org",
         "cheatsheetseries.owasp.org",
         "github.com",
-        "nodegoat.herokuapp.com"
+        "nodegoat.herokuapp.com",
+        "www.khanacademy.org"
     ];
 
     app.get("/learn", isLoggedIn, (req, res) => {

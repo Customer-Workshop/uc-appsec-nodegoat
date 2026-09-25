@@ -16,17 +16,22 @@ function ResearchHandler(db) {
 
     this.displayResearch = (req, res, next) => {
 
+        const renderWithError = (researchError) => res.render("research", {
+            researchError,
+            environmentalScripts
+        });
+
         if (req.query.symbol) {
             const symbol = req.query.symbol;
 
             if (!SYMBOL_RE.test(symbol)) {
-                return next(new Error("Invalid stock symbol requested"));
+                return renderWithError("Enter a stock symbol of up to 10 letters, digits, dots or dashes.");
             }
 
             const url = RESEARCH_BASE_URL + encodeURIComponent(symbol);
             return needle.get(url, (error, newResponse, body) => {
                 if (error || newResponse.statusCode !== 200) {
-                    return next(new Error("Unable to retrieve stock information"));
+                    return renderWithError(`Unable to retrieve stock information for ${symbol}.`);
                 }
                 res.writeHead(200, {
                     "Content-Type": "text/plain"
